@@ -72,12 +72,24 @@ app.post('/searchName', urlencodedParser, function (req, res) {
 	res.set('Content-Type', 'text/plain');
 	
 	if(validationResults[0]){ 
-		var errorMessages = validationResults[1]
+		var errorMessages = validationResults[1];
 		errorMessages = errorMessages.substring(0, errorMessages.length - 2);
 		return res.send({ message: errorMessages });
 	}
 	
-	return res.send({ message: "Successful Query" });
+	//Query Database
+	var query = client.query("SELECT * FROM names ORDER BY name");
+	var queryResults = [];
+	query.on('error', function(error) {
+		console.log(error);
+    });
+	query.on('row', function(row) {
+		queryResults.push(row);
+    });
+	query.on('end', function(result) {
+		console.log(queryResults);
+		return res.send({ message: "Successful Query" });
+    });
 });
 
 /*****************end of post and gets*******************/
