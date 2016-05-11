@@ -1,0 +1,26 @@
+{
+  "name": "sqlitewnodejs",
+  "version": "1.0.0",
+  "description": "Simple program for retrieving information from the database.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Vincent Heredia",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.15.1",
+    "express": "^4.13.4",
+    "pg": "^4.5.5"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VincentHeredia/sqlite3withNodejs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/VincentHeredia/sqlite3withNodejs/issues"
+  },
+  "homepage": "https://github.com/VincentHeredia/sqlite3withNodejs#readme"
+}

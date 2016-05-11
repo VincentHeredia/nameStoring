@@ -1,0 +1,59 @@
+@charset "utf-8";
+@import url(https://fonts.googleapis.com/css?family=Archivo+Narrow);
+
+
+
+body {
+	font-family: 'Archivo Narrow', sans-serif;
+	font-size: 150%;
+	margin: 0px;
+	
+	background-color: #f8f8f8;
+	height:100%;
+}
+
+#wrapper{ /* Fixed percentage width for outer container */
+	width: 80%;/*Width is changed to 100% when the window is small*/
+	min-height: 100%;
+	min-width: 320px;
+	margin-right: auto;
+	margin-left: auto;
+	margin-top: 0px;
+	
+	-moz-box-shadow: 0px 0px 5px #888;
+	-webkit-box-shadow: 0px 0px 5px #888;
+	box-shadow: 0px 0px 5px #888;
+}
+
+#nameSearch {
+	margin: 60px 5px;
+}
+
+#nameSearch form div{
+	display: inline-block;
+}
+
+#newNames {
+	margin: 60px 5px;
+}
+
+#searchLength {
+	width: 70px;
+}
+
+#searchResult {
+	margin-top: 20px;
+	min-height: 100px;
+	border: 1px solid #000;
+}
+
+.messages {
+	font-style: italic;
+	font-size: 80%;
+}
+
+@media (max-width: 768px){/* swap to 100% width if window is small */
+	#wrapper{
+		width: 100%;
+	}
+}

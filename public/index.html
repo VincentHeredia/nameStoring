@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Character Names</title>
+	<link rel="stylesheet" href="styles.css">
+	<script src="jquery-1.12.3.js"></script>
+	<script src="scripts.js"></script>
+	<!--[if IE]>
+		<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+</head>
+<body>
+	<div id="wrapper">
+		<div id="nameSearch">
+			<h1>Character Names</h1>
+			<form>
+				<div>
+					<label for="searchGender">Gender: </label>
+					<select id="searchGender" name="searchGender">
+						<option value="all">All</option>
+						<option value="unisex">Unisex</option>
+						<option value="male">Male</option>
+						<option value="female">Female</option>
+					</select>
+				</div>
+				<div>
+					<label for="searchMood">Mood: </label>
+					<select id="searchMood" name="searchMood">
+						<option value="all">All</option>
+						<option value="neutral">Neutral</option>
+						<option value="funny">Funny</option>
+						<option value="serious">Serious</option>
+					</select>
+				</div>
+				<div>
+					<label for="searchLength">Length: </label>
+					<input id="searchLength" name = "searchLength" type="number">
+				</div>
+				<div>
+					<label for="search">Search: </label>
+					<input id="searchInput" name = "search" placeholder="Type here...">
+				</div>
+				
+				<button id="subButSearch" type="button">submit</button>
+			</form>
+			<div><span id="searchMessage" class="messages"></span></div>
+			<div id="searchResult">
+				
+			</div>
+		</div>
+		
+		<div id="newNames">
+			<form>
+				<fieldset>
+					<legend>Submit a Name</legend>
+					<div>
+						<label for="name">Name: </label>
+						<input id="inputName" name = "input" placeholder="Type Here..."><br>
+					</div>
+					<div>
+						<label for="gender">Gender: </label>
+						<select id="inputGender" name="gender">
+							<option value="unisex">Unisex</option>
+							<option value="male">Male</option>
+							<option value="female">Female</option>
+						</select>
+					</div>
+					<div>
+						<label for="mood">Mood: </label>
+						<select id="inputMood" name="mood">
+							<option value="neutral">Neutral</option>
+							<option value="funny">Funny</option>
+							<option value="serious">Serious</option>
+						</select>
+					</div>
+					
+					<div class="row">
+						<button id="subButCreate" type="button">submit</button>
+					</div>
+				</fieldset>
+			</form>
+			<div><span id="createMessage" class="messages"></span></div>
+		</div>
+	</div>
+</body>
+</html>
+
+
+
+
+
+
+
