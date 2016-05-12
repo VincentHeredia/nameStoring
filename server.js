@@ -13,6 +13,7 @@ client.connect();
 
 //Other
 var testNum = 0;
+var testSuccess = 0;
 runTests();
 
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
@@ -30,17 +31,15 @@ var server = app.listen(port, function () {
 
 /*****************post and gets*******************/
 
-//
-//Parameters: 
-//Returns: 
+//Handles user's request for creating a new row in the database names
 app.post('/submitName', urlencodedParser, function (req, res) {
 	var userInput = [];
-	userInput[0] = req.body.name.trim() || "";
-	userInput[1] = req.body.gender.trim() || "";
-	userInput[2] = req.body.mood.trim() || "";
-	userInput[3] = userInputName.length;
+	userInput[0] = req.body.name.trim().toLowerCase() || "";
+	userInput[1] = req.body.gender.trim().toLowerCase() || "";
+	userInput[2] = req.body.mood.trim().toLowerCase() || "";
+	userInput[3] = userInput[0].length;
 	
-	displayConsoleMessage(req.body,"(/submitName)");
+	displayConsoleMessage(userInput,"(/submitName)");
 	
 	var validationResults = validateCreate(userInput);
 	console.log("Validation Results: " + validationResults);
@@ -59,14 +58,12 @@ app.post('/submitName', urlencodedParser, function (req, res) {
 	return res.send({ message: "Submitted Name" });
 });
 
-//
-//Parameters: 
-//Returns: 
+//Handles user's request for the names database search
 app.post('/searchName', urlencodedParser, function (req, res) {
 	var userInput = [];
-	userInput[0] = req.body.name.trim() || "";
-	userInput[1] = req.body.gender.trim() || "";
-	userInput[2] = req.body.mood.trim() || "";
+	userInput[0] = req.body.name.trim().toLowerCase() || "";
+	userInput[1] = req.body.gender.trim().toLowerCase() || "";
+	userInput[2] = req.body.mood.trim().toLowerCase() || "";
 	userInput[3] = req.body.length.trim() || "";
 	
 	displayConsoleMessage(userInput,"(/searchName)");
@@ -84,11 +81,17 @@ app.post('/searchName', urlencodedParser, function (req, res) {
 	}
 	
 	//Query Database
-	var query = client.query(searchForNames(userInput));
+	var query = client.query(buildQueryString(userInput));
 	var queryResults = [];
 	query.on('error', function(error) { console.log(error); });
 	query.on('row', function(row) { queryResults.push(row); });
 	query.on('end', function(result) {
+		
+		//Change the first letter of the name to uppercase
+		for(i=0; i < queryResults.length; i++){
+			queryResults[i].name = queryResults[i].name.substring(0,1).toUpperCase() + queryResults[i].name.substring(1,queryResults[i].name.length);
+		}
+		
 		return res.send({ 
 			message: "Successful Query",
 			result: queryResults
@@ -101,13 +104,16 @@ app.post('/searchName', urlencodedParser, function (req, res) {
 
 /*****************query functions*******************/
 
-//
-//Parameters: 
-//Returns: 
-function searchForNames (userInput) {
+//Builds query string for searching the database
+//Parameters: user input's for the different fields (string array) (name, gender, mood, length)
+//Returns: query string
+function buildQueryString (userInput) {
 	var queryString = "SELECT * FROM names";
+	var whereFlag = false;
 	
 	
+	
+	//if(!whereFlag) { whereFlag = true; queryString += " WHERE "; }
 	
 	queryString += " ORDER BY name"
 	console.log(queryString);
@@ -120,36 +126,53 @@ function searchForNames (userInput) {
 /*****************validation functions*******************/
 
 //Validates create input from the user
-//Parameters: user input's for the different fields (as an array) (name, gender, mood, length)
+//Parameters: user input's for the different fields (string array) (name, gender, mood, length)
 //Returns: true if the validation passes, false if the validation fails
 function validateCreate(userInput) {
 	var errorFlag = true;
 	var errorMessages = "Error: ";
 	
-	if(userInput[0] == ""){ errorFlag = false; errorMessages += "Name is blank, "; }
-	if(userInput[1] == ""){ errorFlag = false; errorMessages += "Gender is blank, "; }
-	if(userInput[2] == ""){ errorFlag = false; errorMessages += "Mood is blank, "; }
+	var validGenders = ["unisex","male","female"];
+	var validMoods = ["neutral","serious","funny"];
+	
+	if(userInput[0] == ""){ 
+	errorFlag = false; errorMessages += "Name is blank, "; 
+	}
+	//Check if the name is a duplicate
+	
+	
+	//Check if the name is longer then 2 letters
+	if(userInput[0].length < 3) {
+		errorFlag = false; errorMessages += "Name is too short, "; 
+	}
+	
+	if(!compareVarAgainstVarArray(userInput[1], validGenders)){ 
+		errorFlag = false; errorMessages += "Invalid gender, "; 
+	}
+	if(!compareVarAgainstVarArray(userInput[2], validMoods)){ 
+		errorFlag = false; errorMessages += "Invalid mood, "; 
+	}
 	
 	return [errorFlag, errorMessages];
 }
 
 //Validates search input from the user
-//Parameters: user input's for the different fields (as an array) (name, gender, mood, length)
+//Parameters: user input's for the different fields (string array) (name, gender, mood, length)
 //Returns: true if the validation passes, false if the validation fails
 function validateSearch(userInput){
 	var errorFlag = true;
 	var errorMessages = "Error: ";
 	
-	var validGenders = ["","unisex","male","female"];
-	var validMoods = ["","neutral","serious","funny"];
+	var validGenders = ["","unisex","male","female","all"];
+	var validMoods = ["","neutral","serious","funny","all"];
 	
 	//validate gender
-	if(compareStringVsStringArray(userInput[1], validGenders)){ 
+	if(!compareVarAgainstVarArray(userInput[1], validGenders)){ 
 		errorFlag = false; errorMessages += "Invalid gender, "; 
 	}
 	
 	//validate mood
-	if(compareStringVsStringArray(userInput[2], validMoods)){ 
+	if(!compareVarAgainstVarArray(userInput[2], validMoods)){ 
 		errorFlag = false; errorMessages += "Invalid mood, "; 
 	}
 	
@@ -162,14 +185,12 @@ function validateSearch(userInput){
 	return [errorFlag, errorMessages];
 }
 
-//Compares a string against each string in an array
-//Parameters: the string to compare, the string array
+//Compares a variable against each variable in an array
+//Parameters: the string to compare (any datatype), the string array (any datatype), Must match datatype
 //Returns: true if there was a match, false if there isnt a match
-function compareStringVsStringArray(compStr, compStrArray){
-	for(i=0; i < compStrArray.length; i++){
-		if(compStr == compStrArray[i]){
-			return true;
-		}
+function compareVarAgainstVarArray(compVar, compVarArray){
+	for(i=0; i < compVarArray.length; i++){
+		if(compVar === compVarArray[i]){ return true; }
 	}
 	return false;
 }
@@ -194,13 +215,13 @@ function displayConsoleMessage(data, url) {
 
 
 
-//
-//Parameters: 
-//Returns: 
+//Runs tests
+//Parameters: None
+//Returns: Nothing
 function runTests(){
 	
 	//-----------------Test validate functions-----------------
-	//validateSearch(userInputName, userInputGender, userInputMood, userInputLength);
+	//validateSearch(userInput);
 	assert(validateSearch(["", "", "", ""])[0], true);
 	assert(validateSearch(["", "unisex", "", ""])[0], true);
 	assert(validateSearch(["", "male", "", ""])[0], true);
@@ -208,14 +229,14 @@ function runTests(){
 	assert(validateSearch(["", "random", "", ""])[0], false);
 	
 	assert(validateSearch(["", "", "neutral", ""])[0], true);
-	assert(validateSearch(["", "", "serious", ""])[0], true);
+	assert(validateSearch(["", "", "serious", ""])[0], true) 
 	assert(validateSearch(["", "", "funny", ""])[0], true);
 	assert(validateSearch(["", "", "random", ""])[0], false);
 	
 	assert(validateSearch(["", "", "", "1"])[0], true);
 	assert(validateSearch(["", "", "", "12"])[0], true);
 	assert(validateSearch(["", "", "", "0"])[0], false);
-	assert(validateSearch(["", "", "", "-1"])[0], false);
+	assert(validateSearch(["", "", "", "-1"])[0], false); 
 	assert(validateSearch(["", "", "", "-12"])[0], false);
 	
 	assert(validateSearch(["", "unisex", "neutral", ""])[0], true);
@@ -224,28 +245,61 @@ function runTests(){
 	assert(validateSearch(["", "female", "neutral", "-1"])[0], false);
 	assert(validateSearch(["", "random", "random", "-1"])[0], false);
 	
-	//validateCreate(userInputName, userInputGender, userInputMood);
+	//validateCreate(userInput);
+	assert(validateCreate(["Name", "unisex", "neutral"])[0], true);
+	assert(validateCreate(["Name", "male", "neutral"])[0], true);
+	assert(validateCreate(["Name", "female", "neutral"])[0], true);
+	assert(validateCreate(["Name", "unisex", "funny"])[0], true);
+	assert(validateCreate(["Name", "male", "serious"])[0], true);
 	
+	assert(validateCreate(["", "unisex", "neutral"])[0], false);
+	assert(validateCreate(["Na", "male", "serious"])[0], false);
+	assert(validateCreate(["n", "male", "serious"])[0], false);
+	assert(validateCreate(["Name", "", "neutral"])[0], false);
+	assert(validateCreate(["Name", "unisex", ""])[0], false);
+	assert(validateCreate(["Name", "random", "neutral"])[0], false);
+	assert(validateCreate(["Name", "unisex", "random"])[0], false);
+	assert(validateCreate(["", "", "random"])[0], false);
 	
-	//compareStringVsStringArray(compStr, compStrArray);
-	
+	//compareVarAgainstVarArray(compStr, compStrArray);
+	assert(compareVarAgainstVarArray("", ["","test1","test2"]), true);
+	assert(compareVarAgainstVarArray("test1", ["","test1","test2"]), true);
+	assert(compareVarAgainstVarArray("test2", ["","test1","test2"]), true);
+	assert(compareVarAgainstVarArray("", ["test1","test2"]), false);
+	assert(compareVarAgainstVarArray("test3", ["","test1","test2"]), false);
 	
 	//-----------------Test query functions`-----------------
-	//searchForNames (userInputName, userInputGender, userInputMood, userInputLength);
+	//buildQueryString (userInput);
+	assert(buildQueryString (["","","",""]), "SELECT * FROM names ORDER BY name");
+	assert(buildQueryString (["T","","",""]), "SELECT * FROM names WHERE name LIKE 'T%' ORDER BY name");
+	assert(buildQueryString (["Ji","","",""]), "SELECT * FROM names WHERE name LIKE 'Ji%' ORDER BY name");
+	assert(buildQueryString (["ji","","",""]), "SELECT * FROM names WHERE name LIKE 'Ji%' ORDER BY name");
 	
+	
+	outputTestResults();
 }
 
+//Basic test function, output's test's results to the console
+//Parameters: the function result (any datatype), the expected result (any datatype),  Must match datatype
+//Returns: Test result string
 function assert(functionResult, expectedResult){
 	var testMessage = "Test Numer: " + testNum;	
-	if(functionResult == expectedResult){
-		testMessage += " Success, ";
-	}
-	else {
-		testMessage += " Failed,  ";
-	}
+	var testFailed = false;
+	if(functionResult === expectedResult){ testMessage += " Success, "; testSuccess++;}
+	else { testMessage += " Failed,  "; testFailed = true; }
 	testMessage += " Expect: " + expectedResult + " Returned: " + functionResult;
-	console.log(testMessage);
 	testNum++;
+	if(testFailed) { console.log(testMessage); }
+	return testMessage;
+}
+
+//Outputs the total amount of tests along with the amount of successes and failures
+//Parameters: None
+//Returns: Nothing
+function outputTestResults(){
+	console.log("\nTest Number: " + testNum);
+	console.log("Tests Successes: " + testSuccess);
+	console.log("Tests Failures: " + (testNum - testSuccess) + "\n");
 }
 
 

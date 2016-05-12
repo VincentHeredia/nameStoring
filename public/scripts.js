@@ -24,6 +24,13 @@ $(document).ready(function(){
 			var data = JSON.parse(msg);
 			console.log(data);
 			$("#createMessage").text(data.message);
+			
+			$("#searchInput").val(userInputName);
+			$("#searchGender").val("all");
+			$("#searchMood").val("all");
+			$("#searchLength").val("");
+			
+			search();
 		});
 		
 		request.fail(function ( jqXHR, textStatus ) {
