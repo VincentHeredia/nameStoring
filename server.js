@@ -12,7 +12,8 @@ var client = new pg.Client(connectionString);
 client.connect();
 
 //Other
-//var calc = require('./calc');
+var testNum = 0;
+runTests();
 
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
 app.use(express.static('public'));
@@ -29,63 +30,64 @@ var server = app.listen(port, function () {
 
 /*****************post and gets*******************/
 
+//
+//Parameters: 
+//Returns: 
 app.post('/submitName', urlencodedParser, function (req, res) {
-
-	userInputName = req.body.name.trim() || "";
-	userInputGender = req.body.gender.trim() || "";
-	userInputMood = req.body.mood.trim() || "";
-	userInputLength = userInputName.length;
+	var userInput = [];
+	userInput[0] = req.body.name.trim() || "";
+	userInput[1] = req.body.gender.trim() || "";
+	userInput[2] = req.body.mood.trim() || "";
+	userInput[3] = userInputName.length;
 	
-	displayConsoleMessage(userInputName, userInputGender, userInputMood, userInputLength, "(/submitName)");
+	displayConsoleMessage(req.body,"(/submitName)");
 	
-	var validationResults = validateCreate(userInputName, userInputGender, userInputMood);
+	var validationResults = validateCreate(userInput);
 	console.log("Validation Results: " + validationResults);
 	
 	res.status(200); //Not needed, automaticly set by express
 	res.set('Content-Type', 'text/plain');
 	
-	if(validationResults[0]){ 
+	if(!validationResults[0]){ 
 		var errorMessages = validationResults[1]
 		errorMessages = errorMessages.substring(0, errorMessages.length - 2);
 		return res.send({ message: errorMessages });
 	}
 	
-	client.query("INSERT INTO names(name, gender, mood, length) VALUES ($1, $2, $3, $4);", [userInputName, userInputGender, userInputMood, userInputLength]);
+	client.query("INSERT INTO names(name, gender, mood, length) VALUES ($1, $2, $3, $4);", [userInput[0], userInput[1], userInput[2], userInput[3]]);
 	
 	return res.send({ message: "Submitted Name" });
 });
 
-
+//
+//Parameters: 
+//Returns: 
 app.post('/searchName', urlencodedParser, function (req, res) {
-
-	userInputName = req.body.name.trim() || "";
-	userInputGender = req.body.gender.trim() || "";
-	userInputMood = req.body.mood.trim() || "";
-	userInputLength = req.body.length.trim() || "";
+	var userInput = [];
+	userInput[0] = req.body.name.trim() || "";
+	userInput[1] = req.body.gender.trim() || "";
+	userInput[2] = req.body.mood.trim() || "";
+	userInput[3] = req.body.length.trim() || "";
 	
-	displayConsoleMessage(userInputName, userInputGender, userInputMood, userInputLength, "(/searchName)");
+	displayConsoleMessage(userInput,"(/searchName)");
 	
-	validationResults = validateSearch(userInputName, userInputGender, userInputMood, userInputLength);
+	validationResults = validateSearch(userInput);
 	console.log("Validation Results: " + validationResults);
 	
 	res.status(200); //Not needed, automaticly set by express
 	res.set('Content-Type', 'text/plain');
 	
-	if(validationResults[0]){ 
+	if(!validationResults[0]){ 
 		var errorMessages = validationResults[1];
 		errorMessages = errorMessages.substring(0, errorMessages.length - 2);
 		return res.send({ message: errorMessages });
 	}
 	
 	//Query Database
-	var query = client.query("SELECT * FROM names ORDER BY name");
+	var query = client.query(searchForNames(userInput));
 	var queryResults = [];
-	query.on('error', function(error) {
-		console.log(error);
-    });
-	query.on('row', function(row) {
-		queryResults.push(row);
-    });
+	query.on('error', function(error) { console.log(error); });
+	query.on('row', function(row) { queryResults.push(row); });
 	query.on('end', function(result) {
 		return res.send({ 
 			message: "Successful Query",
@@ -96,29 +98,80 @@ app.post('/searchName', urlencodedParser, function (req, res) {
 
 /*****************end of post and gets*******************/
 
+
+/*****************query functions*******************/
+
+//
+//Parameters: 
+//Returns: 
+function searchForNames (userInput) {
+	var queryString = "SELECT * FROM names";
+	
+	
+	
+	queryString += " ORDER BY name"
+	console.log(queryString);
+	return queryString;
+}
+
+/*****************end of query functions*******************/
+
+
 /*****************validation functions*******************/
 
-function validateCreate(userInputName, userInputGender, userInputMood) {
-	var errorFlag = false;
+//Validates create input from the user
+//Parameters: user input's for the different fields (as an array) (name, gender, mood, length)
+//Returns: true if the validation passes, false if the validation fails
+function validateCreate(userInput) {
+	var errorFlag = true;
 	var errorMessages = "Error: ";
 	
-	if(userInputName == ""){ errorFlag = true; errorMessages += "Name is blank, "; }
-	if(userInputGender == ""){ errorFlag = true; errorMessages += "Gender is blank, "; }
-	if(userInputMood == ""){ errorFlag = true; errorMessages += "Mood is blank, "; }
+	if(userInput[0] == ""){ errorFlag = false; errorMessages += "Name is blank, "; }
+	if(userInput[1] == ""){ errorFlag = false; errorMessages += "Gender is blank, "; }
+	if(userInput[2] == ""){ errorFlag = false; errorMessages += "Mood is blank, "; }
 	
 	return [errorFlag, errorMessages];
 }
 
-function validateSearch(userInputName, userInputGender, userInputMood, userInputLength){
-	var errorFlag = false;
+//Validates search input from the user
+//Parameters: user input's for the different fields (as an array) (name, gender, mood, length)
+//Returns: true if the validation passes, false if the validation fails
+function validateSearch(userInput){
+	var errorFlag = true;
 	var errorMessages = "Error: ";
 	
-	if(userInputGender == ""){ errorFlag = true; errorMessages += "Gender is blank, "; }
-	if(userInputMood == ""){ errorFlag = true; errorMessages += "Mood is blank, "; }
+	var validGenders = ["","unisex","male","female"];
+	var validMoods = ["","neutral","serious","funny"];
+	
+	//validate gender
+	if(compareStringVsStringArray(userInput[1], validGenders)){ 
+		errorFlag = false; errorMessages += "Invalid gender, "; 
+	}
+	
+	//validate mood
+	if(compareStringVsStringArray(userInput[2], validMoods)){ 
+		errorFlag = false; errorMessages += "Invalid mood, "; 
+	}
+	
+	//validate length
 	var validateCheck = new RegExp("[^0-9]");
-	if(validateCheck.test(userInputLength) || (userInputLength < 1) && (userInputLength != "")) { errorFlag = true; errorMessages += "Length must be greater than 0, "; }
+	if((validateCheck.test(userInput[3]) || (userInput[3] < 1)) && (userInput[3] != "")) { 
+		errorFlag = false; errorMessages += "Length must be greater than 0, "; 
+	}
 	
 	return [errorFlag, errorMessages];
+}
+
+//Compares a string against each string in an array
+//Parameters: the string to compare, the string array
+//Returns: true if there was a match, false if there isnt a match
+function compareStringVsStringArray(compStr, compStrArray){
+	for(i=0; i < compStrArray.length; i++){
+		if(compStr == compStrArray[i]){
+			return true;
+		}
+	}
+	return false;
 }
 
 /*****************end of validation functions*******************/
@@ -126,31 +179,73 @@ function validateSearch(userInputName, userInputGender, userInputMood, userInput
 
 /*****************miscellaneous functions*******************/
 
-function displayConsoleMessage(userInputName, userInputGender, userInputMood, userInputLength, type) {
-	console.log("-------------------REQUEST-------------------");
-	console.log("Got Post From Client " + type);
-	console.log("  NAME: " + userInputName);
-	console.log("GENDER: " + userInputGender);
-	console.log("  MOOD: " + userInputMood);
-	console.log("LENGTH: " + userInputLength);
+//Displays data from the user's request
+//Parameters: request's data (array), url(string)
+//Returns: Nothing
+function displayConsoleMessage(data, url) {
+	console.log("\n-------------------REQUEST-------------------");
+	console.log("Got Post From Client " + url);
+	for(i=0; i < data.length; i++){ console.log(i + ": " + data[i]); }
 	console.log("---------------------------------------------");
 }
 
 /*****************end of miscellaneous functions*******************/
 
 
-/*
-var query = client.query("SELECT firstname, lastname FROM emps ORDER BY lastname, firstname");
-query.on("row", function (row, result) {
-    result.addRow(row);
-});
-*/
 
 
+//
+//Parameters: 
+//Returns: 
+function runTests(){
+	
+	//-----------------Test validate functions-----------------
+	//validateSearch(userInputName, userInputGender, userInputMood, userInputLength);
+	assert(validateSearch(["", "", "", ""])[0], true);
+	assert(validateSearch(["", "unisex", "", ""])[0], true);
+	assert(validateSearch(["", "male", "", ""])[0], true);
+	assert(validateSearch(["", "female", "", ""])[0], true);
+	assert(validateSearch(["", "random", "", ""])[0], false);
+	
+	assert(validateSearch(["", "", "neutral", ""])[0], true);
+	assert(validateSearch(["", "", "serious", ""])[0], true);
+	assert(validateSearch(["", "", "funny", ""])[0], true);
+	assert(validateSearch(["", "", "random", ""])[0], false);
+	
+	assert(validateSearch(["", "", "", "1"])[0], true);
+	assert(validateSearch(["", "", "", "12"])[0], true);
+	assert(validateSearch(["", "", "", "0"])[0], false);
+	assert(validateSearch(["", "", "", "-1"])[0], false);
+	assert(validateSearch(["", "", "", "-12"])[0], false);
+	
+	assert(validateSearch(["", "unisex", "neutral", ""])[0], true);
+	assert(validateSearch(["", "male", "neutral", "12"])[0], true);
+	assert(validateSearch(["", "female", "random", ""])[0], false);
+	assert(validateSearch(["", "female", "neutral", "-1"])[0], false);
+	assert(validateSearch(["", "random", "random", "-1"])[0], false);
+	
+	//validateCreate(userInputName, userInputGender, userInputMood);
+	
+	
+	//compareStringVsStringArray(compStr, compStrArray);
+	
+	
+	//-----------------Test query functions`-----------------
+	//searchForNames (userInputName, userInputGender, userInputMood, userInputLength);
+	
+}
 
-
-
-
-
+function assert(functionResult, expectedResult){
+	var testMessage = "Test Numer: " + testNum;	
+	if(functionResult == expectedResult){
+		testMessage += " Success, ";
+	}
+	else {
+		testMessage += " Failed,  ";
+	}
+	testMessage += " Expect: " + expectedResult + " Returned: " + functionResult;
+	console.log(testMessage);
+	testNum++;
+}
 
 
