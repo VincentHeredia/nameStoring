@@ -87,8 +87,10 @@ app.post('/searchName', urlencodedParser, function (req, res) {
 		queryResults.push(row);
     });
 	query.on('end', function(result) {
-		console.log(queryResults);
-		return res.send({ message: "Successful Query" });
+		return res.send({ 
+			message: "Successful Query",
+			result: queryResults
+		});
     });
 });
 

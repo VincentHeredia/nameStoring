@@ -2,6 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Character Names</title>
 	<link rel="stylesheet" href="styles.css">
 	<script src="jquery-1.12.3.js"></script>
@@ -12,7 +13,7 @@
 </head>
 <body>
 	<div id="wrapper">
-		<div id="nameSearch">
+		<section id="nameSearch">
 			<h1>Character Names</h1>
 			<form>
 				<div>
@@ -46,11 +47,12 @@
 			</form>
 			<div><span id="searchMessage" class="messages"></span></div>
 			<div id="searchResult">
-				
+				<table>
+				</table>
 			</div>
-		</div>
+		</section>
 		
-		<div id="newNames">
+		<section id="newNames">
 			<form>
 				<fieldset>
 					<legend>Submit a Name</legend>
@@ -81,7 +83,7 @@
 				</fieldset>
 			</form>
 			<div><span id="createMessage" class="messages"></span></div>
-		</div>
+		</section>
 	</div>
 </body>
 </html>

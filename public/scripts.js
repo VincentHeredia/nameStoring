@@ -60,9 +60,29 @@ function search() {
 		var data = JSON.parse(msg);
 		console.log(data);
 		$("#searchMessage").text(data.message);
+		displayQuery(data.result);
 	});
 	
 	request.fail(function ( jqXHR, textStatus ) {
 		$("#searchMessage").text("Failed to submit/recieve data. Error: " + textStatus);
 	});		
+}
+
+
+
+function displayQuery(result) {
+	$("#searchResult tr").remove();
+	
+	var htmlDisplay = "<tr><th>Name</th><th>Gender</th><th>Mood</th><th>Length</th></tr>";
+	
+	for(i=0; i < result.length; i++){
+		htmlDisplay += "<tr>"
+		+ "<td>" + result[i].name + "</td>"
+		+ "<td>" + result[i].gender + "</td>"
+		+ "<td>" + result[i].mood + "</td>"
+		+ "<td>" + result[i].length + "</td>"
+		+ "</tr>";
+	}
+	
+	$("#searchResult table").append(htmlDisplay);
 }
