@@ -12,8 +12,7 @@ var client = new pg.Client(connectionString);
 client.connect();
 
 //Other
-var testNum = 0;
-var testSuccess = 0;
+var TestingFunctions = require('./testing');
 runTests();
 
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
@@ -241,8 +240,6 @@ function displayConsoleMessage(data, url) {
 /*****************end of miscellaneous functions*******************/
 
 
-
-
 //Runs tests
 //Parameters: None
 //Returns: Nothing
@@ -250,97 +247,71 @@ function runTests(){
 	
 	//-----------------Test validate functions-----------------
 	//validateSearch(userInput);
-	assert(validateSearch(["", "", "", ""])[0], false);
-	assert(validateSearch(["", "all", "", "100"])[0], false);
-	assert(validateSearch(["", "", "all", "100"])[0], false);
-	assert(validateSearch(["", "all", "all", ""])[0], false);
-	assert(validateSearch(["", "all", "all", "100"])[0], true);
-	assert(validateSearch(["", "unisex", "all", "100"])[0], true);
-	assert(validateSearch(["", "male", "all", "100"])[0], true);
-	assert(validateSearch(["", "female", "all", "100"])[0], true);
-	assert(validateSearch(["", "random", "all", ""])[0], false);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "", "", ""])[0], false);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "all", "", "100"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "", "all", "100"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "all", "all", ""])[0], false);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "all", "all", "100"])[0], true);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "unisex", "all", "100"])[0], true);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "male", "all", "100"])[0], true);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "female", "all", "100"])[0], true);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "random", "all", ""])[0], false);
 	
-	assert(validateSearch(["", "all", "neutral", "100"])[0], true);
-	assert(validateSearch(["", "all", "serious", "100"])[0], true) 
-	assert(validateSearch(["", "all", "funny", "100"])[0], true);
-	assert(validateSearch(["", "all", "random", ""])[0], false);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "all", "neutral", "100"])[0], true);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "all", "serious", "100"])[0], true) 
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "all", "funny", "100"])[0], true);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "all", "random", ""])[0], false);
 	
-	assert(validateSearch(["", "all", "all", "1"])[0], true);
-	assert(validateSearch(["", "all", "all", "12"])[0], true);
-	assert(validateSearch(["", "all", "all", "0"])[0], false);
-	assert(validateSearch(["", "all", "all", "-1"])[0], false); 
-	assert(validateSearch(["", "all", "all", "-12"])[0], false);
-	assert(validateSearch(["", "all", "all", "e"])[0], false);
-	assert(validateSearch(["", "all", "all", "abcd"])[0], false);
-	assert(validateSearch(["", "all", "all", "SELECT * FROM names"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "all", "all", "1"])[0], true);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "all", "all", "12"])[0], true);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "all", "all", "0"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "all", "all", "-1"])[0], false); 
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "all", "all", "-12"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "all", "all", "e"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "all", "all", "abcd"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "all", "all", "SELECT * FROM names"])[0], false);
 	
-	assert(validateSearch(["", "unisex", "neutral", "100"])[0], true);
-	assert(validateSearch(["", "male", "neutral", "12"])[0], true);
-	assert(validateSearch(["", "female", "random", ""])[0], false);
-	assert(validateSearch(["", "female", "neutral", "-1"])[0], false);
-	assert(validateSearch(["", "random", "random", "-1"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "unisex", "neutral", "100"])[0], true);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "male", "neutral", "12"])[0], true);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "female", "random", ""])[0], false);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "female", "neutral", "-1"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateSearch(["", "random", "random", "-1"])[0], false);
 	
 	//validateCreate(userInput);
-	assert(validateCreate(["", "", ""])[0], false);
-	assert(validateCreate(["name", "", "neutral"])[0], false);
-	assert(validateCreate(["name", "unisex", ""])[0], false);
-	assert(validateCreate(["", "unisex", "neutral"])[0], false);
-	assert(validateCreate(["name", "unisex", "neutral"])[0], true);
-	assert(validateCreate(["name", "male", "neutral"])[0], true);
-	assert(validateCreate(["name", "female", "neutral"])[0], true);
-	assert(validateCreate(["name", "unisex", "funny"])[0], true);
-	assert(validateCreate(["name", "male", "serious"])[0], true);
+	TestingFunctions.BasicTesting.assert(validateCreate(["", "", ""])[0], false);
+	TestingFunctions.BasicTesting.assert(validateCreate(["name", "", "neutral"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateCreate(["name", "unisex", ""])[0], false);
+	TestingFunctions.BasicTesting.assert(validateCreate(["", "unisex", "neutral"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateCreate(["name", "unisex", "neutral"])[0], true);
+	TestingFunctions.BasicTesting.assert(validateCreate(["name", "male", "neutral"])[0], true);
+	TestingFunctions.BasicTesting.assert(validateCreate(["name", "female", "neutral"])[0], true);
+	TestingFunctions.BasicTesting.assert(validateCreate(["name", "unisex", "funny"])[0], true);
+	TestingFunctions.BasicTesting.assert(validateCreate(["name", "male", "serious"])[0], true);
 	
-	assert(validateCreate(["", "unisex", "neutral"])[0], false);
-	assert(validateCreate(["na", "male", "serious"])[0], false);
-	assert(validateCreate(["n", "male", "serious"])[0], false);
-	assert(validateCreate(["name", "", "neutral"])[0], false);
-	assert(validateCreate(["name", "unisex", ""])[0], false);
-	assert(validateCreate(["name", "random", "neutral"])[0], false);
-	assert(validateCreate(["name", "unisex", "random"])[0], false);
-	assert(validateCreate(["", "", "random"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateCreate(["", "unisex", "neutral"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateCreate(["na", "male", "serious"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateCreate(["n", "male", "serious"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateCreate(["name", "", "neutral"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateCreate(["name", "unisex", ""])[0], false);
+	TestingFunctions.BasicTesting.assert(validateCreate(["name", "random", "neutral"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateCreate(["name", "unisex", "random"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateCreate(["", "", "random"])[0], false);
 	
-	assert(validateCreate(["testing", "unisex", "neutral"])[0], true);
-	assert(validateCreate(["testing%", "unisex", "neutral"])[0], false);
-	assert(validateCreate(["%testing%", "unisex", "neutral"])[0], false);
-	assert(validateCreate(["testing123", "unisex", "neutral"])[0], true);
-	assert(validateCreate(["123testing", "unisex", "neutral"])[0], true);
-	assert(validateCreate(["<script>alert('hello')</script>", "unisex", "neutral"])[0], false);
-	assert(validateCreate(["!@#$$%^&", "unisex", "neutral"])[0], false);
-	assert(validateCreate(['""', "unisex", "neutral"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateCreate(["testing", "unisex", "neutral"])[0], true);
+	TestingFunctions.BasicTesting.assert(validateCreate(["testing%", "unisex", "neutral"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateCreate(["%testing%", "unisex", "neutral"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateCreate(["testing123", "unisex", "neutral"])[0], true);
+	TestingFunctions.BasicTesting.assert(validateCreate(["123testing", "unisex", "neutral"])[0], true);
+	TestingFunctions.BasicTesting.assert(validateCreate(["<script>alert('hello')</script>", "unisex", "neutral"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateCreate(["!@#$$%^&", "unisex", "neutral"])[0], false);
+	TestingFunctions.BasicTesting.assert(validateCreate(['""', "unisex", "neutral"])[0], false);
 	
 	//compareVarAgainstVarArray(compStr, compStrArray);
-	assert(compareVarAgainstVarArray("", ["","test1","test2"]), true);
-	assert(compareVarAgainstVarArray("test1", ["","test1","test2"]), true);
-	assert(compareVarAgainstVarArray("test2", ["","test1","test2"]), true);
-	assert(compareVarAgainstVarArray("", ["test1","test2"]), false);
-	assert(compareVarAgainstVarArray("test3", ["","test1","test2"]), false);
+	TestingFunctions.BasicTesting.assert(compareVarAgainstVarArray("", ["","test1","test2"]), true);
+	TestingFunctions.BasicTesting.assert(compareVarAgainstVarArray("test1", ["","test1","test2"]), true);
+	TestingFunctions.BasicTesting.assert(compareVarAgainstVarArray("test2", ["","test1","test2"]), true);
+	TestingFunctions.BasicTesting.assert(compareVarAgainstVarArray("", ["test1","test2"]), false);
+	TestingFunctions.BasicTesting.assert(compareVarAgainstVarArray("test3", ["","test1","test2"]), false);
 	
-	
-	outputTestResults();
+	TestingFunctions.BasicTesting.outputTestResults();
 }
-
-//Basic test function, output's test's results to the console
-//Parameters: the function result (any datatype), the expected result (any datatype),  Must match datatype
-//Returns: Test result string
-function assert(functionResult, expectedResult){
-	var testMessage = "Test Numer: " + testNum;	
-	var testFailed = false;
-	if(functionResult === expectedResult){ testMessage += " Success, "; testSuccess++;}
-	else { testMessage += " Failed,  "; testFailed = true; }
-	testMessage += "\n   Expect: " + expectedResult + "\n Returned: " + functionResult;
-	if(testFailed) { console.log(testMessage + "\n"); }
-	testNum++;
-	return testMessage;
-}
-
-//Outputs the total amount of tests along with the amount of successes and failures
-//Parameters: None
-//Returns: Nothing
-function outputTestResults(){
-	console.log("\nTest Number: " + testNum);
-	console.log("Tests Successes: " + testSuccess);
-	console.log("Tests Failures: " + (testNum - testSuccess) + "\n");
-}
-
-
