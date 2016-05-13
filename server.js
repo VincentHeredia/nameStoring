@@ -98,6 +98,7 @@ app.post('/searchName', urlencodedParser, function (req, res) {
 		for(i=0; i < queryResults.length; i++){
 			queryResults[i].name = queryResults[i].name.substring(0,1).toUpperCase() + queryResults[i].name.substring(1,queryResults[i].name.length);
 		}
+		queryResults = scrubNamesDBOutput(queryResults);//removes invalid characters from the query
 		return res.send({ 
 			message: "Successful Query",
 			result: queryResults
@@ -120,6 +121,13 @@ function validateCreate(userInput) {
 	
 	var validGenders = ["unisex","male","female"];
 	var validMoods = ["neutral","serious","funny"];
+	
+	//Only allow the following characters a-z, 0-9, %
+	for (i=0; i < userInput.length; i++){
+		if(/[^a-z0-9%]/.test(userInput[i])){
+			errorFlag = false; errorMessages += "Name contains invalid characters, "; 
+		}
+	}
 	
 	//Check if name is blank
 	if(userInput[0] == ""){ 
@@ -166,13 +174,37 @@ function validateSearch(userInput){
 	}
 	
 	//validate length
-	var validateCheck = new RegExp("[^0-9]");
-	if( validateCheck.test(userInput[3]) || (userInput[3] < 1) ) { 
+	if( /[^0-9]/.test(userInput[3]) || (userInput[3] < 1) ) { 
 		errorFlag = false; errorMessages += "Length must be greater than 0, "; 
 	}
 	
 	return [errorFlag, errorMessages];
 }
+
+//Validates output from the database
+//Parameters: output from a database query (name, gender, mood, length)
+//Returns: true if the validation passes, false if the validation fails
+function scrubNamesDBOutput(queryResults){
+	/*
+	for (i=0; i < queryResults.length; i++){
+		if(/[^a-z0-9]/.test(queryResults[i].name)){
+			queryResults.splice(i, 1);
+		}
+		else if(/[^a-z]/.test(queryResults[i].gender)){
+			
+		}
+		else if(/[^a-z]/.test(queryResults[i].mood)){
+			
+		}
+		else if(/[^0-9]/.test(queryResults[i].length)){
+			
+		}
+	}
+	*/
+	
+	return queryResults;
+}
+
 
 //Compares a variable against each variable in an array
 //Parameters: the string to compare (any datatype), the string array (any datatype), Must match datatype
@@ -243,23 +275,32 @@ function runTests(){
 	
 	//validateCreate(userInput);
 	assert(validateCreate(["", "", ""])[0], false);
-	assert(validateCreate(["Name", "", "neutral"])[0], false);
-	assert(validateCreate(["Name", "unisex", ""])[0], false);
+	assert(validateCreate(["name", "", "neutral"])[0], false);
+	assert(validateCreate(["name", "unisex", ""])[0], false);
 	assert(validateCreate(["", "unisex", "neutral"])[0], false);
-	assert(validateCreate(["Name", "unisex", "neutral"])[0], true);
-	assert(validateCreate(["Name", "male", "neutral"])[0], true);
-	assert(validateCreate(["Name", "female", "neutral"])[0], true);
-	assert(validateCreate(["Name", "unisex", "funny"])[0], true);
-	assert(validateCreate(["Name", "male", "serious"])[0], true);
+	assert(validateCreate(["name", "unisex", "neutral"])[0], true);
+	assert(validateCreate(["name", "male", "neutral"])[0], true);
+	assert(validateCreate(["name", "female", "neutral"])[0], true);
+	assert(validateCreate(["name", "unisex", "funny"])[0], true);
+	assert(validateCreate(["name", "male", "serious"])[0], true);
 	
 	assert(validateCreate(["", "unisex", "neutral"])[0], false);
-	assert(validateCreate(["Na", "male", "serious"])[0], false);
+	assert(validateCreate(["na", "male", "serious"])[0], false);
 	assert(validateCreate(["n", "male", "serious"])[0], false);
-	assert(validateCreate(["Name", "", "neutral"])[0], false);
-	assert(validateCreate(["Name", "unisex", ""])[0], false);
-	assert(validateCreate(["Name", "random", "neutral"])[0], false);
-	assert(validateCreate(["Name", "unisex", "random"])[0], false);
+	assert(validateCreate(["name", "", "neutral"])[0], false);
+	assert(validateCreate(["name", "unisex", ""])[0], false);
+	assert(validateCreate(["name", "random", "neutral"])[0], false);
+	assert(validateCreate(["name", "unisex", "random"])[0], false);
 	assert(validateCreate(["", "", "random"])[0], false);
+	
+	assert(validateCreate(["testing", "unisex", "neutral"])[0], true);
+	assert(validateCreate(["testing%", "unisex", "neutral"])[0], true);
+	assert(validateCreate(["%testing%", "unisex", "neutral"])[0], true);
+	assert(validateCreate(["testing123", "unisex", "neutral"])[0], true);
+	assert(validateCreate(["123testing", "unisex", "neutral"])[0], true);
+	assert(validateCreate(["<script>alert('hello')</script>", "unisex", "neutral"])[0], false);
+	assert(validateCreate(["!@#$$%^&", "unisex", "neutral"])[0], false);
+	assert(validateCreate(['""', "unisex", "neutral"])[0], false);
 	
 	//compareVarAgainstVarArray(compStr, compStrArray);
 	assert(compareVarAgainstVarArray("", ["","test1","test2"]), true);

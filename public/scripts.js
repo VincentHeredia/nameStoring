@@ -25,11 +25,12 @@ $(document).ready(function(){
 			console.log(data);
 			$("#createMessage").text(data.message);
 			
-			$("#searchInput").val(userInputName);
-			$("#searchGender").val("all");
-			$("#searchMood").val("all");
-			$("#searchLength").val("");
-			
+			if(!(data.message.substring(0,5) == "Error:")){
+				$("#searchInput").val(userInputName);
+				$("#searchGender").val("all");
+				$("#searchMood").val("all");
+				$("#searchLength").val("");
+			}
 			search();
 		});
 		
