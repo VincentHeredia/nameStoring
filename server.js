@@ -41,19 +41,20 @@ app.post('/submitName', urlencodedParser, function (req, res) {
 	
 	displayConsoleMessage(userInput,"(/submitName)");
 	
+	//validate user input
 	var validationResults = validateCreate(userInput);
-	console.log("Validation Results: " + validationResults);
 	
 	res.status(200); //Not needed, automaticly set by express
 	res.set('Content-Type', 'text/plain');
 	
+	//if validation failed
 	if(!validationResults[0]){ 
-		var errorMessages = validationResults[1]
+		var errorMessages = validationResults[1];
 		errorMessages = errorMessages.substring(0, errorMessages.length - 2);
 		return res.send({ message: errorMessages });
 	}
 	
-	client.query("INSERT INTO names(name, gender, mood, length) VALUES ($1, $2, $3, $4);", [userInput[0], userInput[1], userInput[2], userInput[3]]);
+	client.query("INSERT INTO names(name, gender, mood, length) VALUES ($1, $2, $3, $4);", userInput);
 	
 	return res.send({ message: "Submitted Name" });
 });
@@ -61,37 +62,42 @@ app.post('/submitName', urlencodedParser, function (req, res) {
 //Handles user's request for the names database search
 app.post('/searchName', urlencodedParser, function (req, res) {
 	var userInput = [];
-	userInput[0] = req.body.name.trim().toLowerCase() || "";
+	userInput[0] = (req.body.name.trim().toLowerCase() + "%") || "%";
 	userInput[1] = req.body.gender.trim().toLowerCase() || "";
 	userInput[2] = req.body.mood.trim().toLowerCase() || "";
-	userInput[3] = req.body.length.trim() || "";
+	userInput[3] = req.body.length.trim() || "100";
 	
 	displayConsoleMessage(userInput,"(/searchName)");
 	
+	//validate user input
 	validationResults = validateSearch(userInput);
-	console.log("Validation Results: " + validationResults);
 	
 	res.status(200); //Not needed, automaticly set by express
 	res.set('Content-Type', 'text/plain');
 	
+	//if validation failed
 	if(!validationResults[0]){ 
 		var errorMessages = validationResults[1];
 		errorMessages = errorMessages.substring(0, errorMessages.length - 2);
 		return res.send({ message: errorMessages });
 	}
 	
+	if(userInput[1] == "all"){ userInput[1] = "%" }
+	if(userInput[2] == "all"){ userInput[2] = "%" }
+	
 	//Query Database
-	var query = client.query(buildQueryString(userInput));
+	var query = client.query({
+		text: "SELECT * FROM names WHERE name LIKE $1 AND gender LIKE $2 AND mood LIKE $3 AND length <= $4 ORDER BY name", 
+		values: userInput
+	});
 	var queryResults = [];
 	query.on('error', function(error) { console.log(error); });
 	query.on('row', function(row) { queryResults.push(row); });
 	query.on('end', function(result) {
-		
-		//Change the first letter of the name to uppercase
+		//Change the first letter of each name to uppercase
 		for(i=0; i < queryResults.length; i++){
 			queryResults[i].name = queryResults[i].name.substring(0,1).toUpperCase() + queryResults[i].name.substring(1,queryResults[i].name.length);
 		}
-		
 		return res.send({ 
 			message: "Successful Query",
 			result: queryResults
@@ -101,26 +107,6 @@ app.post('/searchName', urlencodedParser, function (req, res) {
 
 /*****************end of post and gets*******************/
 
-
-/*****************query functions*******************/
-
-//Builds query string for searching the database
-//Parameters: user input's for the different fields (string array) (name, gender, mood, length)
-//Returns: query string
-function buildQueryString (userInput) {
-	var queryString = "SELECT * FROM names";
-	var whereFlag = false;
-	
-	
-	
-	//if(!whereFlag) { whereFlag = true; queryString += " WHERE "; }
-	
-	queryString += " ORDER BY name"
-	console.log(queryString);
-	return queryString;
-}
-
-/*****************end of query functions*******************/
 
 
 /*****************validation functions*******************/
@@ -135,9 +121,11 @@ function validateCreate(userInput) {
 	var validGenders = ["unisex","male","female"];
 	var validMoods = ["neutral","serious","funny"];
 	
+	//Check if name is blank
 	if(userInput[0] == ""){ 
-	errorFlag = false; errorMessages += "Name is blank, "; 
+		errorFlag = false; errorMessages += "Name is blank, "; 
 	}
+	
 	//Check if the name is a duplicate
 	
 	
@@ -146,6 +134,7 @@ function validateCreate(userInput) {
 		errorFlag = false; errorMessages += "Name is too short, "; 
 	}
 	
+	//Check gender and moods against array's of valid values
 	if(!compareVarAgainstVarArray(userInput[1], validGenders)){ 
 		errorFlag = false; errorMessages += "Invalid gender, "; 
 	}
@@ -163,8 +152,8 @@ function validateSearch(userInput){
 	var errorFlag = true;
 	var errorMessages = "Error: ";
 	
-	var validGenders = ["","unisex","male","female","all"];
-	var validMoods = ["","neutral","serious","funny","all"];
+	var validGenders = ["unisex","male","female","all"];
+	var validMoods = ["neutral","serious","funny","all"];
 	
 	//validate gender
 	if(!compareVarAgainstVarArray(userInput[1], validGenders)){ 
@@ -178,7 +167,7 @@ function validateSearch(userInput){
 	
 	//validate length
 	var validateCheck = new RegExp("[^0-9]");
-	if((validateCheck.test(userInput[3]) || (userInput[3] < 1)) && (userInput[3] != "")) { 
+	if( validateCheck.test(userInput[3]) || (userInput[3] < 1) ) { 
 		errorFlag = false; errorMessages += "Length must be greater than 0, "; 
 	}
 	
@@ -222,30 +211,41 @@ function runTests(){
 	
 	//-----------------Test validate functions-----------------
 	//validateSearch(userInput);
-	assert(validateSearch(["", "", "", ""])[0], true);
-	assert(validateSearch(["", "unisex", "", ""])[0], true);
-	assert(validateSearch(["", "male", "", ""])[0], true);
-	assert(validateSearch(["", "female", "", ""])[0], true);
-	assert(validateSearch(["", "random", "", ""])[0], false);
+	assert(validateSearch(["", "", "", ""])[0], false);
+	assert(validateSearch(["", "all", "", "100"])[0], false);
+	assert(validateSearch(["", "", "all", "100"])[0], false);
+	assert(validateSearch(["", "all", "all", ""])[0], false);
+	assert(validateSearch(["", "all", "all", "100"])[0], true);
+	assert(validateSearch(["", "unisex", "all", "100"])[0], true);
+	assert(validateSearch(["", "male", "all", "100"])[0], true);
+	assert(validateSearch(["", "female", "all", "100"])[0], true);
+	assert(validateSearch(["", "random", "all", ""])[0], false);
 	
-	assert(validateSearch(["", "", "neutral", ""])[0], true);
-	assert(validateSearch(["", "", "serious", ""])[0], true) 
-	assert(validateSearch(["", "", "funny", ""])[0], true);
-	assert(validateSearch(["", "", "random", ""])[0], false);
+	assert(validateSearch(["", "all", "neutral", "100"])[0], true);
+	assert(validateSearch(["", "all", "serious", "100"])[0], true) 
+	assert(validateSearch(["", "all", "funny", "100"])[0], true);
+	assert(validateSearch(["", "all", "random", ""])[0], false);
 	
-	assert(validateSearch(["", "", "", "1"])[0], true);
-	assert(validateSearch(["", "", "", "12"])[0], true);
-	assert(validateSearch(["", "", "", "0"])[0], false);
-	assert(validateSearch(["", "", "", "-1"])[0], false); 
-	assert(validateSearch(["", "", "", "-12"])[0], false);
+	assert(validateSearch(["", "all", "all", "1"])[0], true);
+	assert(validateSearch(["", "all", "all", "12"])[0], true);
+	assert(validateSearch(["", "all", "all", "0"])[0], false);
+	assert(validateSearch(["", "all", "all", "-1"])[0], false); 
+	assert(validateSearch(["", "all", "all", "-12"])[0], false);
+	assert(validateSearch(["", "all", "all", "e"])[0], false);
+	assert(validateSearch(["", "all", "all", "abcd"])[0], false);
+	assert(validateSearch(["", "all", "all", "SELECT * FROM names"])[0], false);
 	
-	assert(validateSearch(["", "unisex", "neutral", ""])[0], true);
+	assert(validateSearch(["", "unisex", "neutral", "100"])[0], true);
 	assert(validateSearch(["", "male", "neutral", "12"])[0], true);
 	assert(validateSearch(["", "female", "random", ""])[0], false);
 	assert(validateSearch(["", "female", "neutral", "-1"])[0], false);
 	assert(validateSearch(["", "random", "random", "-1"])[0], false);
 	
 	//validateCreate(userInput);
+	assert(validateCreate(["", "", ""])[0], false);
+	assert(validateCreate(["Name", "", "neutral"])[0], false);
+	assert(validateCreate(["Name", "unisex", ""])[0], false);
+	assert(validateCreate(["", "unisex", "neutral"])[0], false);
 	assert(validateCreate(["Name", "unisex", "neutral"])[0], true);
 	assert(validateCreate(["Name", "male", "neutral"])[0], true);
 	assert(validateCreate(["Name", "female", "neutral"])[0], true);
@@ -268,13 +268,6 @@ function runTests(){
 	assert(compareVarAgainstVarArray("", ["test1","test2"]), false);
 	assert(compareVarAgainstVarArray("test3", ["","test1","test2"]), false);
 	
-	//-----------------Test query functions`-----------------
-	//buildQueryString (userInput);
-	assert(buildQueryString (["","","",""]), "SELECT * FROM names ORDER BY name");
-	assert(buildQueryString (["T","","",""]), "SELECT * FROM names WHERE name LIKE 'T%' ORDER BY name");
-	assert(buildQueryString (["Ji","","",""]), "SELECT * FROM names WHERE name LIKE 'Ji%' ORDER BY name");
-	assert(buildQueryString (["ji","","",""]), "SELECT * FROM names WHERE name LIKE 'Ji%' ORDER BY name");
-	
 	
 	outputTestResults();
 }
@@ -287,9 +280,9 @@ function assert(functionResult, expectedResult){
 	var testFailed = false;
 	if(functionResult === expectedResult){ testMessage += " Success, "; testSuccess++;}
 	else { testMessage += " Failed,  "; testFailed = true; }
-	testMessage += " Expect: " + expectedResult + " Returned: " + functionResult;
+	testMessage += "\n   Expect: " + expectedResult + "\n Returned: " + functionResult;
+	if(testFailed) { console.log(testMessage + "\n"); }
 	testNum++;
-	if(testFailed) { console.log(testMessage); }
 	return testMessage;
 }
 
