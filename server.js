@@ -71,7 +71,7 @@ app.post('/submitName', urlencodedParser, function (req, res) {
 //Handles user's request for the names database search
 app.post('/searchName', urlencodedParser, function (req, res) {
 	var userInput = [];
-	userInput[0] = (req.body.name.trim().toLowerCase() + "%") || "%";
+	userInput[0] = req.body.name.trim().toLowerCase() || "";
 	userInput[1] = req.body.gender.trim().toLowerCase() || "";
 	userInput[2] = req.body.mood.trim().toLowerCase() || "";
 	userInput[3] = req.body.length.trim() || "100";
@@ -91,6 +91,7 @@ app.post('/searchName', urlencodedParser, function (req, res) {
 		return res.send({ message: errorMessages });
 	}
 	
+	userInput[0] += userInput[0] + "%";
 	if(userInput[1] == "all"){ userInput[1] = "%" }
 	if(userInput[2] == "all"){ userInput[2] = "%" }
 	
@@ -133,7 +134,7 @@ function validateCreate(userInput) {
 	
 	//Only allow the following characters a-z, 0-9, %
 	for (i=0; i < userInput.length; i++){
-		if(/[^a-z0-9%]/.test(userInput[i])){
+		if(/[^a-z0-9]/.test(userInput[i])){
 			errorFlag = false; errorMessages += "Name contains invalid characters, "; 
 		}
 	}
@@ -171,6 +172,11 @@ function validateSearch(userInput){
 	
 	var validGenders = ["unisex","male","female","all"];
 	var validMoods = ["neutral","serious","funny","all"];
+	
+	//validate name
+	if(/[^a-z0-9]/.test(userInput[0])){
+		errorFlag = false; errorMessages += "Invalid characters, ";
+	}
 	
 	//validate gender
 	if(!compareVarAgainstVarArray(userInput[1], validGenders)){ 
@@ -295,8 +301,8 @@ function runTests(){
 	assert(validateCreate(["", "", "random"])[0], false);
 	
 	assert(validateCreate(["testing", "unisex", "neutral"])[0], true);
-	assert(validateCreate(["testing%", "unisex", "neutral"])[0], true);
-	assert(validateCreate(["%testing%", "unisex", "neutral"])[0], true);
+	assert(validateCreate(["testing%", "unisex", "neutral"])[0], false);
+	assert(validateCreate(["%testing%", "unisex", "neutral"])[0], false);
 	assert(validateCreate(["testing123", "unisex", "neutral"])[0], true);
 	assert(validateCreate(["123testing", "unisex", "neutral"])[0], true);
 	assert(validateCreate(["<script>alert('hello')</script>", "unisex", "neutral"])[0], false);
