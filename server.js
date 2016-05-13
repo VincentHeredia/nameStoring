@@ -54,9 +54,18 @@ app.post('/submitName', urlencodedParser, function (req, res) {
 		return res.send({ message: errorMessages });
 	}
 	
-	client.query("INSERT INTO names(name, gender, mood, length) VALUES ($1, $2, $3, $4);", userInput);
-	
-	return res.send({ message: "Submitted Name" });
+	//client.query("INSERT INTO names(name, gender, mood, length) VALUES ($1, $2, $3, $4);", userInput);
+	var query = client.query("INSERT INTO names (name, gender, mood, length)"
+			   + "SELECT CAST($1 AS VARCHAR), $2, $3, $4"
+			   + "WHERE NOT EXISTS (SELECT * FROM names WHERE name = $1)"
+			   , userInput);
+	query.on('error', function(error) { 
+		console.log(error); 
+		return res.send({ message: error });
+	});
+	query.on('end', function(result) {
+		return res.send({ message: "Submitted Name" });
+    });
 });
 
 //Handles user's request for the names database search
@@ -99,7 +108,6 @@ app.post('/searchName', urlencodedParser, function (req, res) {
 			queryResults[i].name = queryResults[i].name.substring(0,1).toUpperCase() + queryResults[i].name.substring(1,queryResults[i].name.length);
 		}
 		queryResults = scrubNamesDBOutput(queryResults);//removes invalid characters from the query
-		console.log(queryResults);
 		return res.send({ 
 			message: "Successful Query",
 			result: queryResults
