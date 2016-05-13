@@ -99,6 +99,7 @@ app.post('/searchName', urlencodedParser, function (req, res) {
 			queryResults[i].name = queryResults[i].name.substring(0,1).toUpperCase() + queryResults[i].name.substring(1,queryResults[i].name.length);
 		}
 		queryResults = scrubNamesDBOutput(queryResults);//removes invalid characters from the query
+		console.log(queryResults);
 		return res.send({ 
 			message: "Successful Query",
 			result: queryResults
@@ -181,30 +182,22 @@ function validateSearch(userInput){
 	return [errorFlag, errorMessages];
 }
 
-//Validates output from the database
+//Replaces some special characters
 //Parameters: output from a database query (name, gender, mood, length)
-//Returns: true if the validation passes, false if the validation fails
+//Returns: 
 function scrubNamesDBOutput(queryResults){
-	/*
 	for (i=0; i < queryResults.length; i++){
-		if(/[^a-z0-9]/.test(queryResults[i].name)){
-			queryResults.splice(i, 1);
-		}
-		else if(/[^a-z]/.test(queryResults[i].gender)){
-			
-		}
-		else if(/[^a-z]/.test(queryResults[i].mood)){
-			
-		}
-		else if(/[^0-9]/.test(queryResults[i].length)){
-			
-		}
+		queryResults[i].name = encodeHTML(queryResults[i].name);
+		queryResults[i].gender = encodeHTML(queryResults[i].gender);
+		queryResults[i].mood = encodeHTML(queryResults[i].mood);
+		queryResults[i].length = encodeHTML(String(queryResults[i].length));
 	}
-	*/
-	
 	return queryResults;
 }
 
+function encodeHTML(str) {	
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;').replace(/;/g, '').replace(/'/g, '');
+}
 
 //Compares a variable against each variable in an array
 //Parameters: the string to compare (any datatype), the string array (any datatype), Must match datatype

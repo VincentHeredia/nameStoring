@@ -96,5 +96,5 @@ function displayQuery(result) {
 }
 
 function encodeHTML(str) {	
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;').replace(/;/g, '').replace(/'/g, '');
 }
