@@ -86,7 +86,8 @@ app.post('/searchName', urlencodedParser, function (req, res) {
 		return res.send({ message: errorMessages });
 	}
 	
-	userInput[0] += userInput[0] + "%";
+	userInput[0] += "%";
+	console.log(userInput[0]);
 	if(userInput[1] == "all"){ userInput[1] = "%" }
 	if(userInput[2] == "all"){ userInput[2] = "%" }
 	
